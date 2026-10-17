@@ -1,0 +1,64 @@
+-- ==========================================
+-- OVERDRIVE H PLUGIN - ADMIN & RESET TAB
+-- ==========================================
+local shared = odh_shared_plugins
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- 1. Tworzenie JEDNEJ zakładki w menu Overdrive H
+local admin_tab = shared.CreateTab("Admin & Utility", "axioriasolver/testplugin/refs/heads/main/icon")
+
+-- Funkcja pomocnicza do bezpiecznego wysyłania komend
+local function sendChatCommand(cmd)
+    pcall(function()
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if channel then channel:SendAsync(cmd) end
+        else
+            local sayMessageRequest = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") 
+                and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+            if sayMessageRequest then sayMessageRequest:FireServer(cmd, "All") end
+        end
+    end)
+end
+
+----------------------------------------------------
+-- SEKCJA 1: QUICK UTILITIES (RESET POSTACI)
+----------------------------------------------------
+local reset_section = admin_tab:AddSection("Player Actions", "RESET & CONTROLS")
+
+reset_section:AddButton("💀 Reset Character", function()
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health = 0
+            shared.Notify("Character Reset!", 2)
+        end
+    end)
+end)
+
+----------------------------------------------------
+-- SEKCJA 2: ADMIN COMMANDS (/map, /sheriff, /murderer)
+----------------------------------------------------
+local admin_section = admin_tab:AddSection("Admin Commands", "MMV CHAT AUTOMATION")
+
+local selectedMap = "Milbase"
+admin_section:AddDropdown("Select Map", {"Milbase", "IceCastle", "Factory", "Farm", "Manor", "Mineshaft"}, function(map)
+    selectedMap = map
+end)
+
+admin_section:AddButton("📍 Send /map Command", function()
+    sendChatCommand("/map " .. selectedMap)
+    shared.Notify("Sent /map " .. selectedMap, 2)
+end)
+
+admin_section:AddButton("👑 Set Sheriff (/sheriff [My Nick])", function()
+    sendChatCommand("/sheriff " .. LocalPlayer.Name)
+    shared.Notify("Sent /sheriff command", 2)
+end)
+
+admin_section:AddButton("🗡️ Set Murderer (/murderer [My Nick])", function()
+    sendChatCommand("/murderer " .. LocalPlayer.Name)
+    shared.Notify("Sent /murderer command", 2)
+end)
