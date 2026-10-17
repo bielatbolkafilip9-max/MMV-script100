@@ -1,0 +1,69 @@
+-- ==========================================
+-- OVERDRIVE H - FIX PLUGIN (AUTOMATION & BOMB JUMP)
+-- ==========================================
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local TextChatService = game:GetService("TextChatService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Funkcja bezpiecznego wysyłania komend czatu
+local function sendChatCommand(cmd)
+    pcall(function()
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            local channel = TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if channel then channel:SendAsync(cmd) end
+        else
+            local sayMessageRequest = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") 
+                and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+            if sayMessageRequest then sayMessageRequest:FireServer(cmd, "All") end
+        end
+    end)
+end
+
+-- Inteligentne wykrywanie końca rundy / lobby / intermission
+local function isInLobbyOrEnded()
+    local success, result = pcall(function()
+        local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+        if playerGui then
+            for _, gui in ipairs(playerGui:GetDescendants()) do
+                if gui:IsA("TextLabel") or gui:IsA("TextButton") then
+                    local text = string.lower(gui.Text)
+                    if text:find("intermission") or text:find("voting") or text:find("victory") or text:find("defeat") or text:find("round over") or text:find("waiting") then
+                        return true
+                    end
+                end
+            end
+        end
+        return false
+    end)
+    return success and result
+end
+
+-- Auto Load Bomb Jump z Twojego linku GitHub
+pcall(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/aux0on/jaigbj/refs/heads/main/.lua"))()
+end)
+
+-- Pętla automatycznych komend działająca płynnie co rundę
+task.spawn(function()
+    local sentThisRound = false
+    while true do
+        if isInLobbyOrEnded() then
+            -- Gdy gra wchodzi w stan lobby/konta rundy, resetujemy flagę
+            sentThisRound = false 
+        else
+            -- Gdy zaczyna się nowa runda i jeszcze nie wysłano komend
+            if not sentThisRound then
+                task.wait(1.5) -- Krótkie opóźnienie na załadowanie mapy
+                sendChatCommand("/map Milbase")
+                task.wait(0.5)
+                sendChatCommand("/sheriff " .. LocalPlayer.Name)
+                task.wait(0.5)
+                sendChatCommand("/murderer " .. LocalPlayer.Name)
+                
+                sentThisRound = true -- Komendy wysłane, czekamy na nową rundę
+            end
+        end
+        task.wait(1)
+    end
+end)
