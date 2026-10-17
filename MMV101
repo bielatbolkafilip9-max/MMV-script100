@@ -1,0 +1,73 @@
+-- ==========================================
+-- QUICK RESET BUTTON + TOGGLE ON/OFF SCREEN
+-- ==========================================
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Usuń stare GUI jeśli istnieje
+if CoreGui:FindFirstChild("MMV_ResetButtonGui") then
+    CoreGui.MMV_ResetButtonGui:Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MMV_ResetButtonGui"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- 1. Przycisk ON/OFF (do chowania/pokazywania przycisku Reset)
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0, 80, 0, 30)
+ToggleButton.Position = UDim2.new(0.02, 0, 0.3, 0) -- Lewy bok ekranu
+ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+ToggleButton.Text = "Reset: ON"
+ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 150)
+ToggleButton.TextSize = 12
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 6)
+ToggleCorner.Parent = ToggleButton
+
+-- 2. Główny przycisk RESET
+local ResetButton = Instance.new("TextButton")
+ResetButton.Size = UDim2.new(0, 110, 0, 50)
+ResetButton.Position = UDim2.new(0.02, 0, 0.36, 0) -- Tuż pod przyciskiem ON/OFF
+ResetButton.BackgroundColor3 = Color3.fromRGB(200, 40, 40)
+ResetButton.Text = "💀 RESET"
+ResetButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ResetButton.TextSize = 16
+ResetButton.Font = Enum.Font.SourceSansBold
+ResetButton.Active = true
+ResetButton.Draggable = true
+ResetButton.Parent = ScreenGui
+
+local ResetCorner = Instance.new("UICorner")
+ResetCorner.CornerRadius = UDim.new(0, 8)
+ResetCorner.Parent = ResetButton
+
+-- Funkcja natychmiastowego resetu postaci
+ResetButton.MouseButton1Click:Connect(function()
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character:FindFirstChildOfClass("Humanoid").Health = 0
+        end
+    end)
+end)
+
+-- Przełączanie widoczności (ON/OFF)
+local isVisible = true
+ToggleButton.MouseButton1Click:Connect(function()
+    isVisible = not isVisible
+    ResetButton.Visible = isVisible
+    if isVisible then
+        ToggleButton.Text = "Reset: ON"
+        ToggleButton.TextColor3 = Color3.fromRGB(0, 255, 150)
+    else
+        ToggleButton.Text = "Reset: OFF"
+        ToggleButton.TextColor3 = Color3.fromRGB(255, 80, 80)
+    end
+end)
